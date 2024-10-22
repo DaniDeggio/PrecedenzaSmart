@@ -32,15 +32,6 @@ class VideoStream:
         self.stopped = True
         self.cap.release()
 
-# Configurazione socket TCP
-TCP_IP = '127.0.0.1'  # IP del server
-TCP_PORT = 5005       # Porta del server
-BUFFER_SIZE = 1024    # Dimensione buffer
-
-# Creazione del socket
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((TCP_IP, TCP_PORT))
-
 # Creazione app Flask
 app = Flask(__name__)
 
@@ -120,7 +111,7 @@ def process_video():
         fps = frame_count / (end_time - start_time)
         cvzone.putTextRect(frame, f'FPS (visual): {round(fps, 2)}', (10, 30), 1, 1)
 
-        s.close()
+        s.close
 
         if inference_frame_count > 0:
             inference_fps = inference_frame_count / total_inference_time
