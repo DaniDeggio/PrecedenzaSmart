@@ -72,6 +72,15 @@ def process_video():
         if frame_count % 6 != 0:
             continue
 
+        # Configurazione socket TCP
+        TCP_IP = '127.0.0.1'  # IP del server
+        TCP_PORT = 5005       # Porta del server
+        BUFFER_SIZE = 1024    # Dimensione buffer
+
+        # Creazione del socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((TCP_IP, TCP_PORT))
+
         resized_frame = cv2.resize(frame, (320, 240))
 
         inference_start = time.time()
@@ -110,6 +119,8 @@ def process_video():
         end_time = time.time()
         fps = frame_count / (end_time - start_time)
         cvzone.putTextRect(frame, f'FPS (visual): {round(fps, 2)}', (10, 30), 1, 1)
+
+        s.close()
 
         if inference_frame_count > 0:
             inference_fps = inference_frame_count / total_inference_time
