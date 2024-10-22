@@ -7,7 +7,7 @@ import time
 import socket
 from flask import Flask, Response
 from collections import defaultdict
-from threading import Thread
+from threading import Thread, Lock
 
 # Thread for video capture to improve performance by separating video acquisition from processing
 class VideoStream:
@@ -51,8 +51,13 @@ model = YOLO('240_yolov8n_full_integer_quant_edgetpu.tflite', task='detect')
 with open("coco.txt", "r") as my_file:
     class_list = my_file.read().split("\n")
 
+# Variabile condivisa per il frame elaborato
+processed_frame = None
+lock = Lock()  # Lock per gestire l'accesso concorrente al frame
+
 # Funzione per elaborare i frame separata dal server
 def process_video():
+    global processed_frame
     frame_count = 0
     start_time = time.time()
     total_inference_time = 0
@@ -110,12 +115,18 @@ def process_video():
             inference_fps = inference_frame_count / total_inference_time
             cvzone.putTextRect(frame, f'FPS (inference): {round(inference_fps, 2)}', (10, 60), 1, 1)
 
+        # Aggiorna il frame elaborato
+        with lock:
+            processed_frame = frame
+
 # Funzione per generare lo stream video per il server Flask
 def generate_frames():
+    global processed_frame
     while True:
-        ret, frame = vs.read()  # Legge dal thread del video
-        if not ret:
-            break
+        with lock:
+            if processed_frame is None:
+                continue
+            frame = processed_frame.copy()  # Copia il frame elaborato
 
         # Codifica il frame come JPEG
         ret, buffer = cv2.imencode('.jpg', frame)
